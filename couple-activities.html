@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>💑 Our Activities</title>
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --match-bg: linear-gradient(135deg, #f953c6, #b91d73);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* ── SCREENS ── */
+        .screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .screen.active { display: flex; }
+
+        /* ── SELECT SCREEN ── */
+        #screen-select { gap: 28px; }
+
+        .logo { font-size: 3.5rem; }
+        .select-title { font-size: 2rem; font-weight: 800; text-align: center; }
+        .select-sub { font-size: 1rem; opacity: 0.65; text-align: center; }
+
+        .user-buttons { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+
+        .user-btn {
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 24px;
+            padding: 28px 36px;
+            cursor: pointer;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            transition: all 0.25s;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            min-width: 140px;
+        }
+        .user-btn:hover {
+            background: rgba(255,255,255,0.16);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+            border-color: rgba(255,255,255,0.45);
+        }
+        .user-btn .ub-emoji { font-size: 3rem; display: block; margin-bottom: 8px; }
+
+        /* ── SWIPE SCREEN ── */
+        .swipe-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(15,52,96,0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .chip {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 7px 14px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+        .chip:hover { background: rgba(255,255,255,0.18); }
+
+        .matches-chip {
+            background: rgba(255,215,0,0.15);
+            border-color: rgba(255,215,0,0.4);
+            color: #FFD700;
+        }
+        .matches-chip:hover { background: rgba(255,215,0,0.25); }
+
+        .card-container {
+            position: fixed;
+            top: 62px; bottom: 115px;
+            left: 16px; right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── ACTIVITY CARD ── */
+        .activity-card {
+            position: absolute;
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            max-height: 570px;
+            border-radius: 26px;
+            overflow: hidden;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.45);
+            background: white;
+            color: #222;
+            will-change: transform;
+        }
+        .activity-card.dragging { cursor: grabbing; transition: none !important; }
+        .activity-card.fly-right {
+            transition: transform 0.38s cubic-bezier(.55,.06,.68,.19), opacity 0.38s;
+            transform: translateX(160%) rotate(32deg) !important;
+            opacity: 0;
+        }
+        .activity-card.fly-left {
+            transition: transform 0.38s cubic-bezier(.55,.06,.68,.19), opacity 0.38s;
+            transform: translateX(-160%) rotate(-32deg) !important;
+            opacity: 0;
+        }
+        .activity-card.snap-back {
+            transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .card-banner {
+            height: 52%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5.5rem;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .card-cat-badge {
+            position: absolute;
+            top: 14px; left: 14px;
+            background: rgba(0,0,0,0.28);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.72rem;
+            color: white;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .card-body {
+            padding: 18px 20px;
+            height: 48%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .card-name { font-size: 1.35rem; font-weight: 800; margin-bottom: 3px; }
+        .card-loc { font-size: 0.82rem; color: #777; margin-bottom: 10px; }
+        .card-desc { font-size: 0.88rem; line-height: 1.55; color: #444; margin-bottom: 12px; }
+        .card-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+        .pill {
+            background: #f2f2f2;
+            border-radius: 14px;
+            padding: 4px 11px;
+            font-size: 0.73rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        /* LIKE / NOPE stamps */
+        .stamp {
+            position: absolute;
+            top: 28px;
+            font-size: 2.2rem;
+            font-weight: 900;
+            border-radius: 8px;
+            padding: 5px 14px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+            border-width: 4px;
+            border-style: solid;
+        }
+        .stamp.like  { right: 18px; color: #27ae60; border-color: #27ae60; transform: rotate(15deg); }
+        .stamp.nope  { left: 18px;  color: #e74c3c; border-color: #e74c3c; transform: rotate(-15deg); }
+
+        /* ── ACTION BUTTONS ── */
+        .action-buttons {
+            position: fixed;
+            bottom: 26px; left: 0; right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+        }
+        .action-btn {
+            width: 68px; height: 68px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            transition: all 0.22s;
+        }
+        .action-btn.nope  { box-shadow: 0 8px 24px rgba(231,76,60,0.35); }
+        .action-btn.like  { box-shadow: 0 8px 24px rgba(39,174,96,0.35); }
+        .action-btn.super { box-shadow: 0 8px 24px rgba(52,152,219,0.35); width: 52px; height: 52px; font-size: 1.4rem; }
+        .action-btn:hover  { transform: scale(1.1); }
+        .action-btn:active { transform: scale(0.93); }
+
+        /* Progress */
+        .progress-wrap {
+            position: fixed;
+            bottom: 108px; left: 20px; right: 20px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B6B, #4ECDC4);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        /* ── MATCH SCREEN ── */
+        #screen-match {
+            background: var(--match-bg);
+            z-index: 200;
+            gap: 18px;
+            overflow-y: auto;
+            justify-content: flex-start;
+            padding-top: 40px;
+        }
+        .match-heading { font-size: 2.8rem; font-weight: 900; text-align: center; }
+        .match-sub { font-size: 1rem; opacity: 0.9; text-align: center; }
+
+        .match-card {
+            background: white;
+            color: #222;
+            border-radius: 22px;
+            padding: 22px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .match-card-emoji  { font-size: 3.5rem; text-align: center; margin-bottom: 8px; }
+        .match-card-name   { font-size: 1.45rem; font-weight: 800; text-align: center; margin-bottom: 4px; }
+        .match-card-loc    { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 16px; }
+
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .detail-box { background: #f6f6f6; border-radius: 14px; padding: 11px 13px; }
+        .detail-lbl { font-size: 0.68rem; text-transform: uppercase; color: #999; font-weight: 700; margin-bottom: 3px; }
+        .detail-val { font-size: 0.84rem; font-weight: 700; color: #222; }
+
+        .tips-box { background: #fffbea; border: 1px solid #ffe07a; border-radius: 14px; padding: 12px 14px; }
+        .tips-box h4 { font-size: 0.78rem; color: #7a5c00; font-weight: 700; margin-bottom: 7px; }
+        .tips-box li { font-size: 0.8rem; color: #7a5c00; margin-bottom: 3px; list-style: none; }
+        .tips-box li::before { content: "• "; }
+
+        .match-btns { display: flex; gap: 10px; width: 100%; max-width: 400px; }
+        .mbtn {
+            flex: 1; padding: 15px; border-radius: 16px; border: none;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .mbtn.ghost { background: rgba(255,255,255,0.2); color: white; }
+        .mbtn.solid { background: white; color: #b91d73; }
+        .mbtn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* ── MATCHES LIST SCREEN ── */
+        #screen-matches {
+            justify-content: flex-start;
+            padding: 72px 16px 24px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .matches-topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15,52,96,0.9);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+        }
+        .matches-topbar-title { font-size: 1.2rem; font-weight: 800; }
+
+        .matches-list { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 14px; }
+
+        .match-list-item {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 18px;
+            backdrop-filter: blur(8px);
+        }
+        .mli-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .mli-icon {
+            width: 58px; height: 58px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem;
+            flex-shrink: 0;
+        }
+        .mli-info h3 { font-size: 1.05rem; font-weight: 800; }
+        .mli-info p  { font-size: 0.78rem; opacity: 0.55; margin-top: 2px; }
+
+        .mli-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .mli-cell { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 9px 12px; }
+        .mli-cell .lbl { font-size: 0.64rem; text-transform: uppercase; opacity: 0.45; font-weight: 700; }
+        .mli-cell .val { font-size: 0.8rem; font-weight: 700; margin-top: 2px; }
+
+        .mli-tips {
+            margin-top: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+        .mli-tips .lbl { font-size: 0.64rem; text-transform: uppercase; opacity: 0.45; font-weight: 700; margin-bottom: 6px; }
+        .mli-tips .tip { font-size: 0.78rem; opacity: 0.8; margin-bottom: 3px; }
+        .mli-tips .tip::before { content: "• "; }
+
+        .no-matches { text-align: center; opacity: 0.6; padding: 40px 0; }
+        .no-matches .nm-emoji { font-size: 4rem; margin-bottom: 14px; }
+
+        /* ── EMPTY SCREEN ── */
+        #screen-empty { gap: 18px; text-align: center; }
+        .empty-emoji  { font-size: 5rem; }
+        .empty-title  { font-size: 1.9rem; font-weight: 800; }
+        .empty-sub    { font-size: 1rem; opacity: 0.65; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white; border: none; border-radius: 16px;
+            padding: 15px 32px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.25s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(255,107,107,0.35); }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white; border-radius: 16px;
+            padding: 13px 28px; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; transition: all 0.25s;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.18); }
+
+        /* ── CONFETTI ── */
+        .confetti-layer {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 199;
+        }
+        .cf {
+            position: absolute;
+            animation: cf-fall linear forwards;
+        }
+        @keyframes cf-fall {
+            0%   { transform: translateY(-30px) rotate(0deg);   opacity: 1; }
+            100% { transform: translateY(105vh) rotate(800deg); opacity: 0; }
+        }
+
+        /* ── CARD GRADIENTS ── */
+        .g1  { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .g2  { background: linear-gradient(135deg,#f093fb,#f5576c); }
+        .g3  { background: linear-gradient(135deg,#4facfe,#00f2fe); }
+        .g4  { background: linear-gradient(135deg,#43e97b,#38f9d7); }
+        .g5  { background: linear-gradient(135deg,#fa709a,#fee140); }
+        .g6  { background: linear-gradient(135deg,#a18cd1,#fbc2eb); }
+        .g7  { background: linear-gradient(135deg,#ffecd2,#fcb69f); }
+        .g8  { background: linear-gradient(135deg,#ff9a9e,#fad0c4); }
+        .g9  { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); }
+        .g10 { background: linear-gradient(135deg,#d4fc79,#96e6a1); }
+        .g11 { background: linear-gradient(135deg,#f7971e,#ffd200); }
+        .g12 { background: linear-gradient(135deg,#30cfd0,#330867); }
+    </style>
+</head>
+<body>
+
+<!-- Confetti layer -->
+<div class="confetti-layer" id="confetti-layer"></div>
+
+<!-- ═══ SELECT SCREEN ═══ -->
+<div class="screen active" id="screen-select">
+    <div class="logo">💑</div>
+    <div class="select-title">Our Activities</div>
+    <div class="select-sub">Who's swiping right now?</div>
+    <div class="user-buttons">
+        <button class="user-btn" onclick="selectUser(0)">
+            <span class="ub-emoji">🧑</span>
+            Me
+        </button>
+        <button class="user-btn" onclick="selectUser(1)">
+            <span class="ub-emoji">💗</span>
+            My Babe
+        </button>
+    </div>
+</div>
+
+<!-- ═══ SWIPE SCREEN ═══ -->
+<div class="screen" id="screen-swipe">
+    <div class="swipe-header">
+        <span class="chip" id="user-chip">🧑 Me</span>
+        <button class="chip matches-chip" onclick="goMatches()">❤️ Matches <span id="match-count">0</span></button>
+        <button class="chip" onclick="goSelect()">Switch</button>
+    </div>
+
+    <div class="card-container" id="card-container"></div>
+
+    <div class="progress-wrap">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="action-btn nope" onclick="swipe('left')"  title="Nope">❌</button>
+        <button class="action-btn super" onclick="swipe('super')" title="Super Like">⭐</button>
+        <button class="action-btn like" onclick="swipe('right')" title="Like">💚</button>
+    </div>
+</div>
+
+<!-- ═══ MATCH SCREEN ═══ -->
+<div class="screen" id="screen-match">
+    <div class="match-heading">🎉 It's a Match!</div>
+    <div class="match-sub">You both want to do this one!</div>
+    <div class="match-card" id="match-card"></div>
+    <div class="match-btns">
+        <button class="mbtn ghost" onclick="goSwipe()">Keep Swiping</button>
+        <button class="mbtn solid" onclick="goMatches()">See All Matches</button>
+    </div>
+</div>
+
+<!-- ═══ MATCHES LIST SCREEN ═══ -->
+<div class="screen" id="screen-matches">
+    <div class="matches-topbar">
+        <button class="chip" onclick="goSwipe()">← Back</button>
+        <span class="matches-topbar-title">❤️ Your Matches</span>
+        <button class="chip" style="background:rgba(231,76,60,0.2);border-color:rgba(231,76,60,0.4);color:#e74c3c;font-size:0.75rem" onclick="confirmReset()">Reset</button>
+    </div>
+    <div class="matches-list" id="matches-list"></div>
+</div>
+
+<!-- ═══ EMPTY SCREEN ═══ -->
+<div class="screen" id="screen-empty">
+    <div class="empty-emoji">🎊</div>
+    <div class="empty-title">All done!</div>
+    <div class="empty-sub">Pass it to your partner to swipe through too</div>
+    <button class="btn-primary" onclick="goMatches()">See Your Matches ❤️</button>
+    <button class="btn-ghost" style="margin-top:8px" onclick="goSelect()">Switch User</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  ACTIVITY DATA
+// ═══════════════════════════════════════════════════════════════
+const ACTIVITIES = [
+    {
+        id:1, name:"Kayaking in Connemara", emoji:"🛶", cat:"Adventure", g:"g3",
+        loc:"Connemara, Co. Galway",
+        desc:"Paddle through the stunning Atlantic waters of Connemara surrounded by wild mountains and bog landscapes.",
+        price:"€40–60 pp", duration:"Half day (3–4 hrs)", bestTime:"May – Sep", diff:"Beginner friendly",
+        tips:["Wetsuits provided","Book ahead in summer","No experience needed","Bring a waterproof camera"]
+    },
+    {
+        id:2, name:"Surfing in Lahinch", emoji:"🏄", cat:"Adventure", g:"g4",
+        loc:"Lahinch, Co. Clare",
+        desc:"Catch waves on one of Ireland's most famous surf beaches. Lessons for all levels, and a buzzing surf town vibe.",
+        price:"€30–50 pp", duration:"2–3 hours", bestTime:"Year-round", diff:"All levels",
+        tips:["Lessons available","Wetsuit hire included","Best big swells in autumn/winter","Grab food at Barrtra after"]
+    },
+    {
+        id:3, name:"Weekend in Lisbon", emoji:"🇵🇹", cat:"Holiday", g:"g5",
+        loc:"Lisbon, Portugal",
+        desc:"Stunning Portuguese capital — pastéis de nata, vintage trams, fado music, and gorgeous hilltop viewpoints.",
+        price:"€300–500 pp", duration:"3–4 days", bestTime:"Mar–May, Sep–Nov", diff:"Easy",
+        tips:["Direct flights from Dublin","Explore Alfama district","Pastéis de Belém is unmissable","24hr tram pass is great value"]
+    },
+    {
+        id:4, name:"See 'Michael' in Cinema", emoji:"🎬", cat:"Culture", g:"g2",
+        loc:"Your local cinema",
+        desc:"Catch the Michael Jackson biopic on the big screen. Grab a large popcorn, settle in, and enjoy the show.",
+        price:"€15–25 for two", duration:"~2.5 hours", bestTime:"Any weekend", diff:"Easy",
+        tips:["Book online to skip the queue","Arrive early for good seats","Big popcorn is always the move","Check Vue / Odeon / Omniplex listings"]
+    },
+    {
+        id:5, name:"Trip to Leitrim", emoji:"🏡", cat:"Getaway", g:"g10",
+        loc:"Co. Leitrim",
+        desc:"Ireland's most underrated county — stunning lakes, rolling hills, and genuine peace and quiet. A perfect escape.",
+        price:"€150–300 for a weekend", duration:"Weekend", bestTime:"Apr – Oct", diff:"Easy",
+        tips:["Hire a canal boat on Shannon–Erne Waterway","Visit Glencar Waterfall (WB Yeats' favourite)","Cosy pubs with live trad music","Book a cottage on Airbnb"]
+    },
+    {
+        id:6, name:"Cliffs of Moher", emoji:"🏔️", cat:"Nature", g:"g1",
+        loc:"Co. Clare",
+        desc:"Stand at the edge of 214m cliffs plunging into the Atlantic. One of Ireland's most jaw-dropping sights.",
+        price:"€8 pp", duration:"Half day", bestTime:"Year-round", diff:"Easy walk",
+        tips:["Go early morning to beat crowds","Wear windproof layers","Walk north on the coastal path for fewer people","Combine with an Aran Islands day trip"]
+    },
+    {
+        id:7, name:"Skellig Michael Boat Tour", emoji:"⛵", cat:"Adventure", g:"g3",
+        loc:"Co. Kerry",
+        desc:"Boat out to this UNESCO World Heritage island — an ancient monastery perched on dramatic Atlantic rock spires. Unforgettable.",
+        price:"€80–100 pp", duration:"Full day", bestTime:"May – Sep", diff:"Moderate (700 steps)",
+        tips:["Book months ahead — very limited spots","Weather dependent, get flexible dates","Star Wars filming location","Bring a packed lunch and layers"]
+    },
+    {
+        id:8, name:"Dublin Food Tour", emoji:"🍽️", cat:"Food & Drink", g:"g5",
+        loc:"Dublin City",
+        desc:"Explore Dublin's thriving food scene — artisan markets, hidden gems, craft drinks, and brilliant restaurants.",
+        price:"€50–80 pp guided", duration:"3–4 hours", bestTime:"Year-round", diff:"Easy",
+        tips:["Iveagh Markets and George's St Arcade","Book a guided tour for hidden spots","Pair with craft beer stops","Try Assassination Custard or Bastible"]
+    },
+    {
+        id:9, name:"Galway Weekend", emoji:"🎵", cat:"City Break", g:"g6",
+        loc:"Galway City",
+        desc:"Ireland's cultural heartbeat — cobbled streets, live trad music every night, incredible seafood, and the craic is mighty.",
+        price:"€200–400 for a weekend", duration:"Weekend", bestTime:"Year-round", diff:"Easy",
+        tips:["Tigh Coilí for live trad nightly","Try Ard Bia or Loam for dinner","Walk the Salthill promenade","Book ahead for summer weekends"]
+    },
+    {
+        id:10, name:"Hot Air Balloon", emoji:"🎈", cat:"Adventure", g:"g7",
+        loc:"Various Irish locations",
+        desc:"Float above the Irish countryside at sunrise — a magical, incredibly romantic experience unlike anything else.",
+        price:"€150–200 pp", duration:"1–2 hr flight", bestTime:"May – Sep", diff:"Easy",
+        tips:["Weather dependent — get flexible booking","Sunrise flights are most magical","Bring warm layers regardless of season","Champagne often included at landing!"]
+    },
+    {
+        id:11, name:"Barcelona City Break", emoji:"🇪🇸", cat:"Holiday", g:"g2",
+        loc:"Barcelona, Spain",
+        desc:"Gaudí architecture, tapas, beach, La Boqueria market, and incredible nightlife. Barcelona genuinely has it all.",
+        price:"€350–600 pp", duration:"4–5 days", bestTime:"Apr–Jun, Sep–Oct", diff:"Easy",
+        tips:["Book Sagrada Família weeks ahead","Direct flights from Dublin","La Barceloneta beach for evenings","Avoid August heat if you can"]
+    },
+    {
+        id:12, name:"Aran Islands Trip", emoji:"🏝️", cat:"Nature", g:"g4",
+        loc:"Aran Islands, Co. Galway",
+        desc:"Step back in time on these remote Atlantic islands — ancient stone forts, cycling, and raw Irish island culture.",
+        price:"€60–80 pp return ferry", duration:"Day trip or overnight", bestTime:"Apr – Oct", diff:"Easy",
+        tips:["Hire bikes on arrival","Visit Dún Aonghasa fort","Ferry from Rossaveel or Doolin","Try the seafood chowder"]
+    },
+    {
+        id:13, name:"Wild Atlantic Way Road Trip", emoji:"🚗", cat:"Adventure", g:"g9",
+        loc:"West Coast of Ireland",
+        desc:"Drive one of the world's great coastal routes — from Donegal to Cork along Ireland's dramatic west coast.",
+        price:"€400–700 for a week", duration:"5–7 days", bestTime:"May – Sep", diff:"Easy",
+        tips:["Rent a car for full freedom","Book accommodation ahead in July/Aug","Malin Head to Mizen Head is the full route","Pack layers — weather changes fast"]
+    },
+    {
+        id:14, name:"Porto Wine Weekend", emoji:"🍷", cat:"Holiday", g:"g8",
+        loc:"Porto, Portugal",
+        desc:"Gorgeous riverside city, port wine cellars, stunning azulejo tiles, and incredible food for very little money.",
+        price:"€250–450 pp", duration:"3–4 days", bestTime:"Mar–Jun, Sep–Nov", diff:"Easy",
+        tips:["Direct flights from Dublin","Port wine caves in Vila Nova de Gaia","Try a francesinha sandwich","Livraria Lello bookshop is stunning","Very affordable city"]
+    },
+    {
+        id:15, name:"Northern Lights in Iceland", emoji:"🌌", cat:"Holiday", g:"g1",
+        loc:"Iceland",
+        desc:"Chase the Aurora Borealis across Iceland's otherworldly volcanic landscapes. A truly once-in-a-lifetime experience.",
+        price:"€600–1000 pp", duration:"4–5 days", bestTime:"Oct – Mar", diff:"Easy–moderate",
+        tips:["Best Oct–Feb for aurora activity","Blue Lagoon is a must","Rent a car for flexibility","Golden Circle day tour","Book guided aurora tour with local experts"]
+    },
+    {
+        id:16, name:"Wicklow Mountains Hike", emoji:"⛰️", cat:"Adventure", g:"g10",
+        loc:"Wicklow Mountains National Park",
+        desc:"Just an hour from Dublin — stunning mountain scenery, ancient Glendalough monastery, and brilliant walking trails.",
+        price:"Free – €20 parking", duration:"Half to full day", bestTime:"Year-round", diff:"Moderate",
+        tips:["Glendalough is the star attraction","Spinc trail has incredible views","Pack waterproofs always","Dog-friendly trails throughout"]
+    },
+    {
+        id:17, name:"Whiskey Distillery Tour", emoji:"🥃", cat:"Food & Drink", g:"g7",
+        loc:"Dublin / Various",
+        desc:"Learn the story of Irish whiskey and taste some of the world's best drams on a proper guided distillery tour.",
+        price:"€20–40 pp", duration:"2–3 hours", bestTime:"Year-round", diff:"Easy",
+        tips:["Jameson Distillery in Smithfield is classic","Teeling in Dublin Liberties is excellent","Slane Castle Distillery for something different","Book ahead at weekends"]
+    },
+    {
+        id:18, name:"Amsterdam Weekend", emoji:"🌷", cat:"Holiday", g:"g3",
+        loc:"Amsterdam, Netherlands",
+        desc:"Canals, bikes, world-class museums, incredible markets, and a brilliant atmosphere any time of year.",
+        price:"€350–550 pp", duration:"3–4 days", bestTime:"Mar–May, Sep–Nov", diff:"Easy",
+        tips:["Rent bikes — it's the only way","Rijksmuseum and Van Gogh Museum unmissable","Albert Cuyp market for street food","Visit Keukenhof in spring (tulips!)","Direct flights from Dublin"]
+    },
+    {
+        id:19, name:"Cooking Class Dublin", emoji:"👨‍🍳", cat:"Food & Drink", g:"g5",
+        loc:"Dublin City",
+        desc:"Cook together — Italian pasta, sushi, modern Irish cuisine. Hands-on fun and then you eat everything you made.",
+        price:"€60–100 pp", duration:"3–4 hours", bestTime:"Year-round", diff:"Easy",
+        tips:["Dublin Cookery School is excellent","Pick a cuisine you both love","Great rainy-day date idea","Often includes wine pairing"]
+    },
+    {
+        id:20, name:"Rock Climbing in Dalkey", emoji:"🧗", cat:"Adventure", g:"g1",
+        loc:"Dalkey, Co. Dublin",
+        desc:"Try real granite sea-cliff climbing just 20 minutes from Dublin city, with stunning coastal views and professional guides.",
+        price:"€50–80 pp with guide", duration:"Half day", bestTime:"Year-round", diff:"Beginner friendly",
+        tips:["All gear provided","No experience needed","Stunning sea views","Easy DART access from city centre","Grab lunch in Dalkey village after"]
+    },
+    {
+        id:21, name:"Marrakech, Morocco", emoji:"🏮", cat:"Holiday", g:"g8",
+        loc:"Marrakech, Morocco",
+        desc:"Get lost in the medina's labyrinthine souks, stay in a gorgeous riad, visit hammams, and soak up the magic.",
+        price:"€400–650 pp", duration:"4–5 days", bestTime:"Oct – Apr", diff:"Easy",
+        tips:["Stay in a traditional riad","Direct flights from Dublin","Book a cooking class","Visit Majorelle Garden","Avoid August — extremely hot"]
+    },
+    {
+        id:22, name:"Prague City Break", emoji:"🏰", cat:"Holiday", g:"g6",
+        loc:"Prague, Czech Republic",
+        desc:"One of Europe's most stunning medieval cities — incredible architecture, brilliant beer, and amazing nightlife.",
+        price:"€300–500 pp", duration:"3–4 days", bestTime:"Mar–May, Sep–Nov", diff:"Easy",
+        tips:["Very affordable — great value for money","Walk Charles Bridge at dawn (no crowds)","Prague Castle is spectacular","Czech beer is incredible and cheap","Avoid December markets crowds"]
+    },
+    {
+        id:23, name:"Sea Swimming", emoji:"🏊", cat:"Adventure", g:"g3",
+        loc:"Forty Foot, Sandycove / Various",
+        desc:"Join Ireland's beloved year-round sea swimming tradition. Invigorating, free, and absolutely addictive once you start.",
+        price:"Free!", duration:"1–2 hours", bestTime:"Year-round (brave!)", diff:"Easy",
+        tips:["Forty Foot in Sandycove is iconic","White Rock beach in Killiney is quieter","Go early morning for the best experience","Bring a flask of tea","You'll feel incredible after"]
+    },
+    {
+        id:24, name:"Tenerife Sun Holiday", emoji:"☀️", cat:"Holiday", g:"g11",
+        loc:"Tenerife, Spain",
+        desc:"Guaranteed sunshine, volcanic landscapes, great beaches, and water parks. A proper holiday to recharge completely.",
+        price:"€400–700 pp", duration:"7–10 days", bestTime:"Year-round", diff:"Easy",
+        tips:["Mount Teide volcano is spectacular","South for beaches, north for authenticity","Direct flights from Dublin","Siam Park water park is world-class","All-inclusive great value off-peak"]
+    },
+    {
+        id:25, name:"Comedy Night Dublin", emoji:"😂", cat:"Culture", g:"g2",
+        loc:"Dublin City",
+        desc:"Catch world-class stand-up at one of Dublin's brilliant comedy clubs — guaranteed brilliant night out.",
+        price:"€20–50 pp", duration:"2–3 hours", bestTime:"Year-round", diff:"Easy",
+        tips:["The Laughter Lounge is excellent","Check Vicar Street for big international names","Book online in advance","Great date night out","Dinner beforehand in Temple Bar or Liberties"]
+    },
+    {
+        id:26, name:"Connemara Cycling", emoji:"🚴", cat:"Adventure", g:"g4",
+        loc:"Connemara, Co. Galway",
+        desc:"Cycle through some of Ireland's most dramatic scenery — bog land, mountain lakes, and rugged Atlantic coastline.",
+        price:"€15–25 bike hire/day", duration:"Full day", bestTime:"May – Sep", diff:"Moderate",
+        tips:["Clifden to Roundstone route is beautiful","Pack rain gear and snacks","E-bikes available for hire","Stop at Dan O'Hara's heritage cottage"]
+    },
+    {
+        id:27, name:"Slieve League Cliffs", emoji:"🌊", cat:"Nature", g:"g9",
+        loc:"Co. Donegal",
+        desc:"The highest sea cliffs in Europe — three times higher than Moher — and without the crowds. Absolutely spectacular.",
+        price:"Free", duration:"Half to full day", bestTime:"May – Sep", diff:"Easy–moderate walk",
+        tips:["Far fewer tourists than Cliffs of Moher","Combine with a Donegal road trip","Pub lunch in Killybegs on the way","Weather changes fast — pack layers"]
+    },
+    {
+        id:28, name:"Santorini, Greece", emoji:"🌅", cat:"Holiday", g:"g8",
+        loc:"Santorini, Greece",
+        desc:"The iconic blue domes, caldera sunsets, volcanic beaches, and gorgeous whitewashed villages. Pure romance.",
+        price:"€600–1000 pp", duration:"5–7 days", bestTime:"May–Jun, Sep", diff:"Easy",
+        tips:["Stay in Oia for best sunset views","Hire a quad bike to explore","Avoid July/August peak crowds","Akrotiri archaeological site is fascinating","Ferry hopping between islands is great"]
+    },
+    {
+        id:29, name:"Amalfi Coast, Italy", emoji:"🍋", cat:"Holiday", g:"g5",
+        loc:"Amalfi Coast, Italy",
+        desc:"Dramatic cliffside villages, crystal-clear water, fresh limoncello, and the most beautiful coastline in Europe.",
+        price:"€600–900 pp", duration:"5–7 days", bestTime:"May–Jun, Sep", diff:"Easy",
+        tips:["Base in Positano or Praiano","Take the ferry between towns — skip driving","Ravello for romantic hilltop dining","Fly to Naples then bus/ferry to coast","Lemon granita every single day"]
+    },
+    {
+        id:30, name:"Kayaking River Shannon", emoji:"🌿", cat:"Adventure", g:"g4",
+        loc:"River Shannon",
+        desc:"Paddle along Ireland's longest river through peaceful lakelands, ancient castles, and gorgeous countryside.",
+        price:"€30–50 pp", duration:"Half to full day", bestTime:"May – Sep", diff:"Beginner friendly",
+        tips:["Lough Derg section is stunning","Portumna to Killaloe is a popular route","Wildlife watching along the way","Guided or self-guided options available"]
+    },
+    {
+        id:31, name:"Abbey Theatre Show", emoji:"🎭", cat:"Culture", g:"g6",
+        loc:"Dublin City",
+        desc:"Ireland's national theatre — world-class productions of Irish and international drama in an iconic venue.",
+        price:"€15–50 pp", duration:"2–3 hours", bestTime:"Year-round", diff:"Easy",
+        tips:["Check the programme online","Book ahead for popular productions","Dinner nearby on Abbey Street before","Dress up a bit for the occasion"]
+    },
+    {
+        id:32, name:"Kilkenny Medieval Weekend", emoji:"⚔️", cat:"City Break", g:"g1",
+        loc:"Kilkenny City",
+        desc:"Ireland's best-preserved medieval city — stunning castle, craft quarter, incredible pubs, and superb food.",
+        price:"€150–300 for a weekend", duration:"Weekend", bestTime:"Year-round", diff:"Easy",
+        tips:["Kilkenny Castle is unmissable","Smithwick's brewery tour","Medieval Mile walking tour","Try Campagne restaurant for fine dining","The Hole in the Wall pub is atmospheric"]
+    },
+    {
+        id:33, name:"Glendalough Sunrise Walk", emoji:"🌄", cat:"Nature", g:"g9",
+        loc:"Glendalough, Co. Wicklow",
+        desc:"Beat the crowds to Glendalough's ancient monastic site at sunrise — mist on the lakes, total silence, absolutely magical.",
+        price:"Free", duration:"3–4 hours", bestTime:"Mar – Oct", diff:"Easy",
+        tips:["Arrive before 8am for the magic","Upper lake trail is stunning","Bring flasks of coffee and breakfast","Park for free before 9am","30 min drive from South Dublin"]
+    },
+    {
+        id:34, name:"Spa Day Getaway", emoji:"🧖", cat:"Relaxation", g:"g8",
+        loc:"Various (Wicklow / Kildare)",
+        desc:"Treat yourselves to a full spa day — thermal pools, massages, scrubs, and complete relaxation together.",
+        price:"€100–200 pp", duration:"Full day", bestTime:"Year-round", diff:"Easy",
+        tips:["Monart in Wexford is world-class","Killashee Hotel Kildare is great value","Book couples' treatments","Midweek is quieter and cheaper","Perfect winter treat"]
+    },
+    {
+        id:35, name:"Bray to Greystones Coastal Walk", emoji:"🚶", cat:"Nature", g:"g3",
+        loc:"Co. Wicklow",
+        desc:"Ireland's most iconic coastal walk — stunning cliff-top trail between two charming seaside towns with great pubs at both ends.",
+        price:"Free + DART fare", duration:"2–3 hours", bestTime:"Year-round", diff:"Easy–moderate",
+        tips:["Take DART to Bray, walk to Greystones","Go on a clear day for views of Wales","La Touche Hotel in Greystones for lunch","Bring the dog — very dog friendly","Check the tide before the cliff section"]
+    },
+    {
+        id:36, name:"Night at the Opera / Ballet", emoji:"🩰", cat:"Culture", g:"g6",
+        loc:"National Concert Hall / Bord Gáis",
+        desc:"A special evening at the opera or ballet — stunning performances at world-class Dublin venues.",
+        price:"€30–80 pp", duration:"2.5–3 hours", bestTime:"Year-round", diff:"Easy",
+        tips:["Bord Gáis Energy Theatre for big productions","National Concert Hall for opera","Book well in advance","Dress up for the occasion","Pre-show dinner in Grand Canal Dock area"]
+    }
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+const USERS       = ['Me', 'My Babe'];
+const USER_EMOJIS = ['🧑', '💗'];
+
+let currentUser = 0;
+let isDragging   = false;
+let startX = 0, startY = 0, moveX = 0;
+let activeCard   = null;
+
+// ── Storage helpers ──
+function getSwipes(u) { return JSON.parse(localStorage.getItem(`swipes_${u}`) || '{}'); }
+function saveSwipe(u, id, dir) {
+    const s = getSwipes(u);
+    s[id] = dir;
+    localStorage.setItem(`swipes_${u}`, JSON.stringify(s));
+}
+function getMatches() { return JSON.parse(localStorage.getItem('matches') || '[]'); }
+function saveMatch(id) {
+    const m = getMatches();
+    if (!m.includes(id)) { m.push(id); localStorage.setItem('matches', JSON.stringify(m)); }
+}
+function isMatch(id) {
+    const s0 = getSwipes(0), s1 = getSwipes(1);
+    return (s0[id] === 'right' || s0[id] === 'super') && (s1[id] === 'right' || s1[id] === 'super');
+}
+
+// ── Screen routing ──
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function goSelect() { showScreen('screen-select'); }
+
+function selectUser(idx) {
+    currentUser = idx;
+    document.getElementById('user-chip').textContent = `${USER_EMOJIS[idx]} ${USERS[idx]}`;
+    refreshMatchCount();
+    goSwipe();
+}
+
+function goSwipe() {
+    showScreen('screen-swipe');
+    renderStack();
+}
+
+function goMatches() {
+    renderMatchesList();
+    showScreen('screen-matches');
+}
+
+// ── Render card stack ──
+function unswiped() {
+    const s = getSwipes(currentUser);
+    return ACTIVITIES.filter(a => !s[a.id]);
+}
+
+function renderStack() {
+    const container = document.getElementById('card-container');
+    const cards = unswiped();
+
+    if (cards.length === 0) { showScreen('screen-empty'); return; }
+
+    container.innerHTML = '';
+
+    // Render up to 3 cards (stack illusion), back to front
+    const slice = cards.slice(0, 3);
+    for (let i = slice.length - 1; i >= 0; i--) {
+        const el = buildCard(slice[i]);
+        el.style.zIndex = slice.length - i;
+        if (i > 0) {
+            const scale = 1 - i * 0.04;
+            const ty    = i * 9;
+            el.style.transform = `scale(${scale}) translateY(${ty}px)`;
+            el.style.pointerEvents = 'none';
+        }
+        container.appendChild(el);
+    }
+
+    updateProgress(cards.length);
+    attachDrag();
+}
+
+function buildCard(act) {
+    const el = document.createElement('div');
+    el.className = 'activity-card';
+    el.dataset.id = act.id;
+    el.innerHTML = `
+        <div class="stamp like">LIKE 💚</div>
+        <div class="stamp nope">NOPE ❌</div>
+        <div class="card-banner ${act.g}">
+            <span>${act.emoji}</span>
+            <div class="card-cat-badge">${act.cat}</div>
+        </div>
+        <div class="card-body">
+            <div class="card-name">${act.name}</div>
+            <div class="card-loc">📍 ${act.loc}</div>
+            <div class="card-desc">${act.desc}</div>
+            <div class="card-pills">
+                <span class="pill">💰 ${act.price}</span>
+                <span class="pill">⏱ ${act.duration}</span>
+                <span class="pill">📅 ${act.bestTime}</span>
+            </div>
+        </div>
+    `;
+    return el;
+}
+
+function updateProgress(remaining) {
+    const pct = ((ACTIVITIES.length - remaining) / ACTIVITIES.length) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function refreshMatchCount() {
+    document.getElementById('match-count').textContent = getMatches().length;
+}
+
+// ── Drag logic ──
+function attachDrag() {
+    const container = document.getElementById('card-container');
+    const top = container.querySelector('.activity-card:last-child');
+    if (!top) return;
+    activeCard = top;
+
+    top.addEventListener('mousedown',  onDragStart);
+    top.addEventListener('touchstart', onDragStart, { passive: true });
+}
+
+function onDragStart(e) {
+    isDragging = true;
+    const pt = e.touches ? e.touches[0] : e;
+    startX = pt.clientX;
+    startY = pt.clientY;
+    moveX  = 0;
+    activeCard.classList.add('dragging');
+
+    document.addEventListener('mousemove',  onDragMove);
+    document.addEventListener('mouseup',    onDragEnd);
+    document.addEventListener('touchmove',  onDragMove, { passive: true });
+    document.addEventListener('touchend',   onDragEnd);
+}
+
+function onDragMove(e) {
+    if (!isDragging) return;
+    const pt = e.touches ? e.touches[0] : e;
+    moveX  = pt.clientX - startX;
+    const moveY = (pt.clientY - startY) * 0.25;
+    const rot   = moveX * 0.07;
+    activeCard.style.transform = `translate(${moveX}px,${moveY}px) rotate(${rot}deg)`;
+
+    const likeEl = activeCard.querySelector('.stamp.like');
+    const nopeEl = activeCard.querySelector('.stamp.nope');
+    if (moveX > 30) {
+        likeEl.style.opacity = Math.min((moveX - 30) / 70, 1);
+        nopeEl.style.opacity = 0;
+    } else if (moveX < -30) {
+        nopeEl.style.opacity = Math.min((-moveX - 30) / 70, 1);
+        likeEl.style.opacity = 0;
+    } else {
+        likeEl.style.opacity = nopeEl.style.opacity = 0;
+    }
+}
+
+function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+
+    document.removeEventListener('mousemove',  onDragMove);
+    document.removeEventListener('mouseup',    onDragEnd);
+    document.removeEventListener('touchmove',  onDragMove);
+    document.removeEventListener('touchend',   onDragEnd);
+
+    activeCard.classList.remove('dragging');
+
+    const threshold = window.innerWidth * 0.28;
+    if      (moveX >  threshold) commitSwipe('right');
+    else if (moveX < -threshold) commitSwipe('left');
+    else {
+        activeCard.classList.add('snap-back');
+        activeCard.style.transform = '';
+        activeCard.querySelector('.stamp.like').style.opacity = 0;
+        activeCard.querySelector('.stamp.nope').style.opacity = 0;
+        activeCard.addEventListener('transitionend', () => activeCard.classList.remove('snap-back'), { once: true });
+    }
+}
+
+// Button swipes
+function swipe(dir) {
+    if (!activeCard) return;
+    moveX = dir === 'right' || dir === 'super' ? 300 : -300;
+    commitSwipe(dir);
+}
+
+function commitSwipe(dir) {
+    const id = parseInt(activeCard.dataset.id, 10);
+
+    activeCard.classList.add(dir === 'left' ? 'fly-left' : 'fly-right');
+
+    setTimeout(() => {
+        saveSwipe(currentUser, id, dir);
+
+        let matched = false;
+        if (dir !== 'left') {
+            if (isMatch(id)) { saveMatch(id); matched = true; }
+        }
+
+        refreshMatchCount();
+
+        if (matched) {
+            showMatchScreen(ACTIVITIES.find(a => a.id === id));
+        } else {
+            renderStack();
+        }
+    }, 360);
+}
+
+// ── Match screen ──
+function showMatchScreen(act) {
+    document.getElementById('match-card').innerHTML = `
+        <div class="match-card-emoji">${act.emoji}</div>
+        <div class="match-card-name">${act.name}</div>
+        <div class="match-card-loc">📍 ${act.loc}</div>
+        <div class="detail-grid">
+            <div class="detail-box"><div class="detail-lbl">💰 Price</div><div class="detail-val">${act.price}</div></div>
+            <div class="detail-box"><div class="detail-lbl">⏱ Duration</div><div class="detail-val">${act.duration}</div></div>
+            <div class="detail-box"><div class="detail-lbl">📅 Best Time</div><div class="detail-val">${act.bestTime}</div></div>
+            <div class="detail-box"><div class="detail-lbl">⭐ Level</div><div class="detail-val">${act.diff}</div></div>
+        </div>
+        ${act.tips ? `
+        <div class="tips-box">
+            <h4>💡 Tips & Need to Know</h4>
+            <ul>${act.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>` : ''}
+    `;
+    launchConfetti();
+    showScreen('screen-match');
+}
+
+// ── Matches list ──
+function renderMatchesList() {
+    const list    = document.getElementById('matches-list');
+    const matches = getMatches();
+
+    if (matches.length === 0) {
+        list.innerHTML = `<div class="no-matches"><div class="nm-emoji">💔</div>
+            <p style="font-size:1.1rem;font-weight:700">No matches yet!</p>
+            <p style="margin-top:8px;font-size:0.85rem;opacity:0.7">Both of you need to swipe right on the same activity</p></div>`;
+        return;
+    }
+
+    list.innerHTML = matches.map(id => {
+        const a = ACTIVITIES.find(x => x.id === id);
+        if (!a) return '';
+        return `
+        <div class="match-list-item">
+            <div class="mli-header">
+                <div class="mli-icon">${a.emoji}</div>
+                <div class="mli-info">
+                    <h3>${a.name}</h3>
+                    <p>📍 ${a.loc}</p>
+                </div>
+            </div>
+            <div class="mli-grid">
+                <div class="mli-cell"><div class="lbl">💰 Price</div><div class="val">${a.price}</div></div>
+                <div class="mli-cell"><div class="lbl">⏱ Duration</div><div class="val">${a.duration}</div></div>
+                <div class="mli-cell"><div class="lbl">📅 Best Time</div><div class="val">${a.bestTime}</div></div>
+                <div class="mli-cell"><div class="lbl">⭐ Level</div><div class="val">${a.diff}</div></div>
+            </div>
+            ${a.tips ? `
+            <div class="mli-tips">
+                <div class="lbl">💡 Tips</div>
+                ${a.tips.map(t => `<div class="tip">${t}</div>`).join('')}
+            </div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+// ── Confetti ──
+function launchConfetti() {
+    const layer  = document.getElementById('confetti-layer');
+    layer.innerHTML = '';
+    const colors = ['#FF6B6B','#4ECDC4','#FFD700','#FF8E53','#a29bfe','#fd79a8','#00b894','#74b9ff'];
+
+    for (let i = 0; i < 90; i++) {
+        const el = document.createElement('div');
+        el.className = 'cf';
+        const size = Math.random() * 12 + 5;
+        el.style.cssText = `
+            left:${Math.random()*100}%;
+            top:-20px;
+            width:${size}px; height:${size}px;
+            background:${colors[Math.floor(Math.random()*colors.length)]};
+            border-radius:${Math.random() > 0.5 ? '50%' : '3px'};
+            animation-duration:${Math.random()*1.5+1.2}s;
+            animation-delay:${Math.random()*0.6}s;
+        `;
+        layer.appendChild(el);
+    }
+    setTimeout(() => { layer.innerHTML = ''; }, 3500);
+}
+
+// ── Reset ──
+function confirmReset() {
+    if (confirm('Reset ALL swipes and matches? This cannot be undone.')) {
+        localStorage.clear();
+        refreshMatchCount();
+        goSwipe();
+    }
+}
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+    if (!document.getElementById('screen-swipe').classList.contains('active')) return;
+    if (e.key === 'ArrowRight') swipe('right');
+    if (e.key === 'ArrowLeft')  swipe('left');
+    if (e.key === 'ArrowUp')    swipe('super');
+});
+
+// ── Init ──
+refreshMatchCount();
+</script>
+</body>
+</html>
